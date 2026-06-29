@@ -1,0 +1,49 @@
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-*-22.04-amd64-server-*"]
+  }
+}
+
+
+resource "aws_key_pair" "voting_app" {
+  key_name   = "voting-app-key"
+  public_key = file("~/.ssh/voting-app-key.pub")
+}
+
+# Instance A - Frontend (public subnet)
+resource "aws_instance" "frontend" {
+  ami = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.frontend.id]
+  key_name               = aws_key_pair.voting_app.key_name
+
+  tags = { Name = "frontend" }
+}
+
+# Instance B - Backend (private subnet)
+resource "aws_instance" "backend" {
+  ami = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private_b.id
+  vpc_security_group_ids = [aws_security_group.backend.id]
+  key_name               = aws_key_pair.voting_app.key_name
+
+  tags = { Name = "backend" }
+}
+
+# Instance C - Database (private subnet)
+resource "aws_instance" "database" {
+  ami = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private_c.id
+  vpc_security_group_ids = [aws_security_group.database.id]
+  key_name               = aws_key_pair.voting_app.key_name
+
+  tags = { Name = "database" }
+}
