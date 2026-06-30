@@ -1,0 +1,130 @@
+---
+- name: Setup Frontend (vote + result)
+  hosts: frontend
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Docker Python SDK
+      pip:
+        name: docker
+        state: present
+
+    - name: Run vote container
+      docker_container:
+        name: vote
+        image: tannaz87/vote:latest
+        state: started
+        ports:
+          - "8080:80"
+        env:
+          REDIS_HOST: "10.0.2.216"
+
+    - name: Run result container
+      docker_container:
+        name: result
+        image: tannaz87/result:latest
+        state: started
+        ports:
+          - "8081:4000"
+        env:
+          PG_HOST: "10.0.3.161"
+          PORT: "4000"
+
+- name: Setup Backend (redis + worker)
+  hosts: backend
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Docker Python SDK
+      pip:
+        name: docker
+        state: present
+
+    - name: Run redis container
+      docker_container:
+        name: redis
+        image: redis:alpine
+        state: started
+        ports:
+          - "6379:6379"
+
+    - name: Run worker container
+      docker_container:
+        name: worker
+        image: tannaz87/worker:latest
+        state: started
+        network_mode: host
+        env:
+          REDIS_HOST: "localhost"
+          DB_HOST: "10.0.3.161"
+
+- name: Setup Database (postgres)
+  hosts: database
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Docker Python SDK
+      pip:
+        name: docker
+        state: present
+
+    - name: Run postgres container
+      docker_container:
+        name: postgres
+        image: postgres:15-alpine
+        state: started
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
+        volumes:
+          - "db-data:/var/lib/postgresql/data"
