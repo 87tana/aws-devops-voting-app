@@ -56,3 +56,22 @@ jobs:
               -e REDIS_HOST=10.0.2.216 tannaz87/vote:latest
             sudo docker run -d --name result -p 8081:4000 \
               -e PG_HOST=10.0.3.161 -e PORT=4000 tannaz87/result:latest
+
+  deploy-k8s:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/redis.yaml
+          kubectl apply -f k8s/postgres.yaml
+          kubectl apply -f k8s/vote.yaml
+          kubectl apply -f k8s/result.yaml
+          kubectl apply -f k8s/worker.yaml
+          kubectl apply -f k8s/ingress.yaml
