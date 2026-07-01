@@ -64,20 +64,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Install kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin
 
       - name: Validate Kubernetes manifests
         run: |
-          # In production with EKS, add these steps before kubectl apply:
-          # - Configure AWS credentials
-          # - Run: aws eks update-kubeconfig --name voting-app-cluster --region eu-central-1
-          # - Then: kubectl apply -f k8s/
-          # 
-          # For now, validating manifest syntax only (no live cluster in CI)
-          kubectl apply -f k8s/redis.yaml --dry-run=client --validate=false
-          kubectl apply -f k8s/postgres.yaml --dry-run=client --validate=false
-          kubectl apply -f k8s/vote.yaml --dry-run=client --validate=false
-          kubectl apply -f k8s/result.yaml --dry-run=client --validate=false
-          kubectl apply -f k8s/worker.yaml --dry-run=client --validate=false
-          kubectl apply -f k8s/ingress.yaml --dry-run=client --validate=false
+          kubeval k8s/redis.yaml
+          kubeval k8s/postgres.yaml
+          kubeval k8s/vote.yaml
+          kubeval k8s/result.yaml
+          kubeval k8s/worker.yaml
+          kubeval k8s/ingress.yaml
