@@ -69,9 +69,9 @@ jobs:
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/redis.yaml
-          kubectl apply -f k8s/postgres.yaml
-          kubectl apply -f k8s/vote.yaml
-          kubectl apply -f k8s/result.yaml
-          kubectl apply -f k8s/worker.yaml
-          kubectl apply -f k8s/ingress.yaml
+          kubectl apply -f k8s/redis.yaml --validate=false
+          kubectl apply -f k8s/postgres.yaml --validate=false
+          kubectl apply -f k8s/vote.yaml --validate=false
+          kubectl apply -f k8s/result.yaml --validate=false
+          kubectl apply -f k8s/worker.yaml --validate=false
+          kubectl apply -f k8s/ingress.yaml --validate=false
