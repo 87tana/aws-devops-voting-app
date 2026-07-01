@@ -67,11 +67,17 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
 
-      - name: Apply Kubernetes manifests
+      - name: Validate Kubernetes manifests
         run: |
-          kubectl apply -f k8s/redis.yaml --validate=false
-          kubectl apply -f k8s/postgres.yaml --validate=false
-          kubectl apply -f k8s/vote.yaml --validate=false
-          kubectl apply -f k8s/result.yaml --validate=false
-          kubectl apply -f k8s/worker.yaml --validate=false
-          kubectl apply -f k8s/ingress.yaml --validate=false
+          # In production with EKS, add these steps before kubectl apply:
+          # - Configure AWS credentials
+          # - Run: aws eks update-kubeconfig --name voting-app-cluster --region eu-central-1
+          # - Then: kubectl apply -f k8s/
+          # 
+          # For now, validating manifest syntax only (no live cluster in CI)
+          kubectl apply -f k8s/redis.yaml --dry-run=client --validate=false
+          kubectl apply -f k8s/postgres.yaml --dry-run=client --validate=false
+          kubectl apply -f k8s/vote.yaml --dry-run=client --validate=false
+          kubectl apply -f k8s/result.yaml --dry-run=client --validate=false
+          kubectl apply -f k8s/worker.yaml --dry-run=client --validate=false
+          kubectl apply -f k8s/ingress.yaml --dry-run=client --validate=false
